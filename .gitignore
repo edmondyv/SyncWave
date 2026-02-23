@@ -1,4 +1,5 @@
 build
+build_check
 g3log-build
 gflags-build
 out

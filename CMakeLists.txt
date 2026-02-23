@@ -42,6 +42,10 @@ else()
     target_compile_options(${PROJECT_NAME} PRIVATE)
 endif()
 
+# Link Win32 libraries for GUI and audio
+if(WIN32)
+  target_link_libraries(${PROJECT_NAME} PRIVATE comctl32)
+endif()
 
 if(CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
