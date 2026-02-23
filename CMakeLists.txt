@@ -55,7 +55,7 @@ endif()
 
 # For GCC/MinGW: link standard libraries statically to avoid DLL dependencies
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  target_link_options(${PROJECT_NAME} PRIVATE -static-libgcc -static-libstdc++)
+  target_link_options(${PROJECT_NAME} PRIVATE -static)
 endif()
 
 if(CMAKE_VERSION VERSION_GREATER 3.12)
