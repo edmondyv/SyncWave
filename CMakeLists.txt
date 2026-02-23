@@ -53,6 +53,11 @@ if(WIN32)
   target_link_libraries(${PROJECT_NAME} PRIVATE comctl32)
 endif()
 
+# For GCC/MinGW: link standard libraries statically to avoid DLL dependencies
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  target_link_options(${PROJECT_NAME} PRIVATE -static-libgcc -static-libstdc++)
+endif()
+
 if(CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 endif()

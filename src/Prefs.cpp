@@ -71,6 +71,7 @@ CPrefs::CPrefs(int argc, char *argv[], int *result)
 	{
 		listDevices();
 		*result = END;
+		return;
 	}
 	if (guiMode)
 	{
@@ -82,7 +83,13 @@ CPrefs::CPrefs(int argc, char *argv[], int *result)
 		*result = initDevice(outDevice.Get());
 		return;
 	}
+#ifdef _WIN32
+	/* Default to GUI mode on Windows when no action flags (-l, -d, -g) are given */
+	guiMode = true;
+	*result = ALL_OK;
+#else
 	*result = END;
+#endif
 }
 
 void CPrefs::listDevices()
