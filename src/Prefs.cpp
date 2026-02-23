@@ -9,6 +9,8 @@ CPrefs::CPrefs(int argc, char *argv[], int *result)
 	args::HelpFlag help(parser, "help", "Display this help menu", {'h', "help"});
 	args::Flag list(parser, "list-devices", "List available devices", {'l', "list-devices"});
 	args::ValueFlag<int> outDevice(parser, "device", "Output device number", {'d', "device"}, -1);
+	args::ValueFlag<int> offsetFlag(parser, "offset", "Delay offset in ms for sync compensation (0-1000)", {'o', "offset"}, DEFAULT_OFFSET_MS);
+	args::Flag guiFlag(parser, "gui", "Launch the graphical interface", {'g', "gui"});
 
 	try
 	{
@@ -36,6 +38,21 @@ CPrefs::CPrefs(int argc, char *argv[], int *result)
 	}
 
 	ma_result hr;
+
+	/* Parse delay offset */
+	delayOffsetMs = offsetFlag.Get();
+	if (delayOffsetMs < 0 || delayOffsetMs > MAX_OFFSET_MS)
+	{
+		std::cout << "Delay offset must be between 0 and " << MAX_OFFSET_MS << " ms." << std::endl;
+		return;
+	}
+
+	/* Check for GUI mode */
+	if (guiFlag)
+	{
+		guiMode = true;
+	}
+
 	if (ma_context_init(NULL, 0, NULL, &context) != MA_SUCCESS)
 	{
 		warn("Failed to initialize audio context.");
@@ -54,6 +71,11 @@ CPrefs::CPrefs(int argc, char *argv[], int *result)
 	{
 		listDevices();
 		*result = END;
+	}
+	if (guiMode)
+	{
+		*result = ALL_OK;
+		return;
 	}
 	if (outDevice.Get() != -1)
 	{

@@ -1,70 +1,50 @@
 #include "common.hpp"
 
-typedef struct
-{
-	ma_pcm_rb buffer;
-	ma_uint32 frameSizeInBytes;
-} SyncWaveContext;
+int runCLI(CPrefs &prefs);
 
-void loopback(ma_device *pDevice, void *pOutput, const void *pInput, ma_uint32 frameCount)
-{
-	SyncWaveContext *ctx = (SyncWaveContext *)pDevice->pUserData;
-	void *bufferOut;
-	ma_uint32 framesToWrite = frameCount;
-	if (ma_pcm_rb_acquire_write(&ctx->buffer, &framesToWrite, &bufferOut) != MA_SUCCESS)
-	{
-		warn("Failed to aquire write on buffer");
-		return;
-	}
-	if (framesToWrite < frameCount)
-	{
-		trace("Buffer full, dropped {} frames.", (frameCount - framesToWrite));
-	}
-
-	memcpy(bufferOut, pInput, static_cast<size_t>(framesToWrite) * ctx->frameSizeInBytes);
-	ma_pcm_rb_commit_write(&ctx->buffer, framesToWrite);
-}
-
-void playback(ma_device *pDevice, void *pOutput, const void *pInput, ma_uint32 frameCount)
-{
-	SyncWaveContext *ctx = (SyncWaveContext *)pDevice->pUserData;
-	void *bufferIn;
-	ma_uint32 framesToRead = frameCount;
-	if (ma_pcm_rb_acquire_read(&ctx->buffer, &framesToRead, &bufferIn) != MA_SUCCESS)
-	{
-		warn("Failed to acquire read on buffer");
-		return;
-	}
-	if (framesToRead < frameCount)
-	{
-		trace("Buffer empty, dropped {} frames.", (frameCount - framesToRead));
-	}
-
-	memcpy(pOutput, bufferIn, static_cast<size_t>(framesToRead) * ctx->frameSizeInBytes);
-	ma_pcm_rb_commit_read(&ctx->buffer, framesToRead);
-
-	(void)pInput;
-}
+#ifdef _WIN32
+#include "gui.hpp"
+#endif
 
 int main(int argc, char *argv[])
 {
-	const std::string directory = "./";
-	const std::string name = "SyncWave";
-	ma_result result;
-
 	int ret = 0;
 	CPrefs prefs(argc, argv, &ret);
 	if (ret != ALL_OK)
 		return ret;
 
+#ifdef _WIN32
+	if (prefs.guiMode)
+		return runGUI(prefs);
+#endif
+
+	return runCLI(prefs);
+}
+
+int runCLI(CPrefs &prefs)
+{
+	ma_result result;
+
 	SyncWaveContext ctxt{};
-	result = ma_pcm_rb_init(ma_format_f32, 2, 16 * 48000, NULL, NULL, &(ctxt.buffer));
+	result = ma_pcm_rb_init(ma_format_f32, DEFAULT_CHANNELS, DEFAULT_BUFFER_FRAMES, NULL, NULL, &(ctxt.buffer));
 	if (result != MA_SUCCESS)
 	{
 		crit("Error: %s", ma_result_description(result));
 		return -1;
 	}
-	ctxt.frameSizeInBytes = ma_get_bytes_per_frame(ma_format_f32, 2);
+	ctxt.frameSizeInBytes = ma_get_bytes_per_frame(ma_format_f32, DEFAULT_CHANNELS);
+
+	/* Apply delay offset for Bluetooth sync compensation */
+	if (prefs.delayOffsetMs > 0)
+	{
+		ma_uint32 delayFrames = static_cast<ma_uint32>(
+			(static_cast<ma_uint64>(prefs.delayOffsetMs) * DEFAULT_SAMPLE_RATE) / 1000);
+		if (!applyDelayOffset(&ctxt, delayFrames))
+		{
+			crit("Failed to apply delay offset.");
+			return -1;
+		}
+	}
 
 	ma_device pdevice;
 	ma_device cdevice;
@@ -78,7 +58,7 @@ int main(int argc, char *argv[])
 		crit("Error: %s", ma_result_description(result));
 		return -1;
 	}
-	UninitDeviceOnExit playback(&pdevice);
+	UninitDeviceOnExit playbackCleanup(&pdevice);
 
 	ma_backend backends[] = {
 			ma_backend_wasapi};
@@ -88,7 +68,7 @@ int main(int argc, char *argv[])
 		crit("Error: %s", ma_result_description(result));
 		return -1;
 	}
-	UninitDeviceOnExit loopback(&cdevice);
+	UninitDeviceOnExit loopbackCleanup(&cdevice);
 
 	result = ma_device_start(&cdevice);
 	if (result != MA_SUCCESS)
@@ -96,8 +76,6 @@ int main(int argc, char *argv[])
 		crit("Error: %s", ma_result_description(result));
 		return -1;
 	}
-
-	// std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
 	result = ma_device_start(&pdevice);
 	if (result != MA_SUCCESS)
@@ -107,6 +85,8 @@ int main(int argc, char *argv[])
 	}
 
 	std::cout << "Press Enter to stop..." << std::endl;
+	if (prefs.delayOffsetMs > 0)
+		std::cout << "Delay offset: " << prefs.delayOffsetMs << " ms" << std::endl;
 	getchar();
 	return 0;
 }

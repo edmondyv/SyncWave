@@ -11,6 +11,8 @@ class CPrefs {
 public:
 	ma_device_config pDeviceConfig, cDeviceConfig;
 	void* input = NULL;
+	int delayOffsetMs = DEFAULT_OFFSET_MS;
+	bool guiMode = false;
 
 	CPrefs(int argc, char* argv[], int* result);
 
@@ -23,4 +25,9 @@ public:
 
 	void listDevices();
 	int initDevice(int);
+
+	ma_device_info* getPlaybackDevices() const { return pPlaybackDeviceInfos; }
+	ma_uint32 getPlaybackDeviceCount() const { return playbackDeviceCount; }
+	ma_context* getContext() { return &context; }
+	bool isContextInit() const { return contextInit; }
 };
