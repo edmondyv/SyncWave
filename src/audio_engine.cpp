@@ -7,7 +7,7 @@ void loopback(ma_device *pDevice, void *pOutput, const void *pInput, ma_uint32 f
 	ma_uint32 framesToWrite = frameCount;
 	if (ma_pcm_rb_acquire_write(&ctx->buffer, &framesToWrite, &bufferOut) != MA_SUCCESS)
 	{
-		warn("Failed to aquire write on buffer");
+		warn("Failed to acquire write on buffer");
 		return;
 	}
 	if (framesToWrite < frameCount)

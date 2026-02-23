@@ -210,7 +210,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 		ma_device_info *devInfos = g_state.prefs->getPlaybackDevices();
 		for (ma_uint32 i = 0; i < devCount; ++i)
 		{
-			char entry[300];
+			char entry[MA_MAX_DEVICE_NAME_LENGTH + 32];
 			if (devInfos[i].isDefault)
 				snprintf(entry, sizeof(entry), "%u: %s (default)", i, devInfos[i].name);
 			else
