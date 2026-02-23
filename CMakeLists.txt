@@ -6,6 +6,12 @@ if(POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
+# Use static CRT (/MT) so the exe runs without MSVC runtime DLLs
+if(POLICY CMP0091)
+  cmake_policy(SET CMP0091 NEW)
+  set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
 project("SyncWave")
 
 #setting the directories
@@ -45,6 +51,11 @@ endif()
 # Link Win32 libraries for GUI and audio
 if(WIN32)
   target_link_libraries(${PROJECT_NAME} PRIVATE comctl32)
+endif()
+
+# For GCC/MinGW: link standard libraries statically to avoid DLL dependencies
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  target_link_options(${PROJECT_NAME} PRIVATE -static-libgcc -static-libstdc++)
 endif()
 
 if(CMAKE_VERSION VERSION_GREATER 3.12)
