@@ -10,9 +10,13 @@ class CPrefs {
 
 public:
 	ma_device_config pDeviceConfig, cDeviceConfig;
+	/* Second playback config used in "Delay Default" mode */
+	ma_device_config pDefaultDeviceConfig;
 	void* input = NULL;
 	int delayOffsetMs = DEFAULT_OFFSET_MS;
 	bool guiMode = false;
+	/* false = delay the output (secondary) device, true = delay the default device */
+	bool delayDefault = false;
 
 	CPrefs(int argc, char* argv[], int* result);
 

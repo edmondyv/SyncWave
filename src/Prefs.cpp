@@ -11,6 +11,7 @@ CPrefs::CPrefs(int argc, char *argv[], int *result)
 	args::ValueFlag<int> outDevice(parser, "device", "Output device number", {'d', "device"}, -1);
 	args::ValueFlag<int> offsetFlag(parser, "offset", "Delay offset in ms for sync compensation (0-1000)", {'o', "offset"}, DEFAULT_OFFSET_MS);
 	args::Flag guiFlag(parser, "gui", "Launch the graphical interface", {'g', "gui"});
+	args::Flag delayDefaultFlag(parser, "delay-default", "Apply delay to default device instead of output device", {"delay-default"});
 
 	try
 	{
@@ -51,6 +52,12 @@ CPrefs::CPrefs(int argc, char *argv[], int *result)
 	if (guiFlag)
 	{
 		guiMode = true;
+	}
+
+	/* Check for delay-default mode */
+	if (delayDefaultFlag)
+	{
+		delayDefault = true;
 	}
 
 	if (ma_context_init(NULL, 0, NULL, &context) != MA_SUCCESS)
@@ -148,6 +155,15 @@ int CPrefs::initDevice(int device)
 	pDeviceConfig.sampleRate = cDeviceConfig.sampleRate;
 	pDeviceConfig.dataCallback = playback;
 	pDeviceConfig.wasapi.noAutoConvertSRC = true;
+
+	/* Configure a playback device for the default device (used in Delay Default mode) */
+	pDefaultDeviceConfig = ma_device_config_init(ma_device_type_playback);
+	pDefaultDeviceConfig.playback.pDeviceID = NULL; /* NULL = system default */
+	pDefaultDeviceConfig.playback.format = cDeviceConfig.capture.format;
+	pDefaultDeviceConfig.playback.channels = cDeviceConfig.capture.channels;
+	pDefaultDeviceConfig.sampleRate = cDeviceConfig.sampleRate;
+	pDefaultDeviceConfig.dataCallback = playbackDefault;
+	pDefaultDeviceConfig.wasapi.noAutoConvertSRC = true;
 
 	return ALL_OK;
 }

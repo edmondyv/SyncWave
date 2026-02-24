@@ -50,7 +50,7 @@ endif()
 
 # Link Win32 libraries for GUI and audio
 if(WIN32)
-  target_link_libraries(${PROJECT_NAME} PRIVATE comctl32)
+  target_link_libraries(${PROJECT_NAME} PRIVATE comctl32 uxtheme)
 endif()
 
 # For GCC/MinGW: link standard libraries statically to avoid DLL dependencies

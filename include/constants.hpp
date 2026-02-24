@@ -10,3 +10,10 @@ constexpr int DEFAULT_CHANNELS = 2;
 constexpr int DEFAULT_OFFSET_MS = 0;
 constexpr int MAX_OFFSET_MS = 1000;
 constexpr int DEFAULT_BUFFER_FRAMES = 16 * DEFAULT_SAMPLE_RATE;
+
+/* Filter constants */
+constexpr int MIN_FILTER_HZ = 20;
+constexpr int MAX_LPF_HZ = 20000;
+constexpr int MAX_HPF_HZ = 5000;
+constexpr int DEFAULT_LPF_HZ = 0;   /* 0 = disabled */
+constexpr int DEFAULT_HPF_HZ = 0;   /* 0 = disabled */
