@@ -1,4 +1,5 @@
 #include "common.hpp"
+#include <memory>
 
 int runCLI(CPrefs &prefs);
 
@@ -96,7 +97,7 @@ int runCLI(CPrefs &prefs)
 
 	/* Optional: init default-device playback in dual-buffer mode */
 	ma_device ddevice;
-	UninitDeviceOnExit *defaultCleanup = nullptr;
+	std::unique_ptr<UninitDeviceOnExit> defaultCleanup;
 	if (ctxt.dualBufferMode)
 	{
 		ma_device_config dCfg = prefs.pDefaultDeviceConfig;
@@ -107,14 +108,13 @@ int runCLI(CPrefs &prefs)
 			crit("Error init default device: %s", ma_result_description(result));
 			return -1;
 		}
-		defaultCleanup = new UninitDeviceOnExit(&ddevice);
+		defaultCleanup = std::make_unique<UninitDeviceOnExit>(&ddevice);
 	}
 
 	result = ma_device_start(&cdevice);
 	if (result != MA_SUCCESS)
 	{
 		crit("Error: %s", ma_result_description(result));
-		delete defaultCleanup;
 		return -1;
 	}
 
@@ -122,7 +122,6 @@ int runCLI(CPrefs &prefs)
 	if (result != MA_SUCCESS)
 	{
 		crit("Error: %s", ma_result_description(result));
-		delete defaultCleanup;
 		return -1;
 	}
 
@@ -132,7 +131,6 @@ int runCLI(CPrefs &prefs)
 		if (result != MA_SUCCESS)
 		{
 			crit("Error starting default device: %s", ma_result_description(result));
-			delete defaultCleanup;
 			return -1;
 		}
 	}
@@ -146,7 +144,7 @@ int runCLI(CPrefs &prefs)
 	}
 	getchar();
 
-	delete defaultCleanup;
+	/* defaultCleanup (unique_ptr) automatically uninits ddevice on scope exit */
 	if (ctxt.dualBufferMode)
 		ma_pcm_rb_uninit(&ctxt.defaultBuffer);
 	return 0;

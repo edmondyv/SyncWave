@@ -327,7 +327,11 @@ static void startAudio(HWND hwnd)
 	if (result != MA_SUCCESS)
 	{
 		setStatus("Failed to start capture.");
-		if (g.ctxt.dualBufferMode) { ma_device_uninit(&g.ddevice); ma_pcm_rb_uninit(&g.ctxt.defaultBuffer); }
+		if (g.ctxt.dualBufferMode)
+		{
+			ma_device_uninit(&g.ddevice);
+			ma_pcm_rb_uninit(&g.ctxt.defaultBuffer);
+		}
 		ma_device_uninit(&g.cdevice);
 		ma_device_uninit(&g.pdevice);
 		ma_pcm_rb_uninit(&g.ctxt.buffer);
@@ -340,7 +344,11 @@ static void startAudio(HWND hwnd)
 	{
 		setStatus("Failed to start playback.");
 		ma_device_stop(&g.cdevice);
-		if (g.ctxt.dualBufferMode) { ma_device_uninit(&g.ddevice); ma_pcm_rb_uninit(&g.ctxt.defaultBuffer); }
+		if (g.ctxt.dualBufferMode)
+		{
+			ma_device_uninit(&g.ddevice);
+			ma_pcm_rb_uninit(&g.ctxt.defaultBuffer);
+		}
 		ma_device_uninit(&g.cdevice);
 		ma_device_uninit(&g.pdevice);
 		ma_pcm_rb_uninit(&g.ctxt.buffer);

@@ -1,6 +1,9 @@
 #include "common.hpp"
 #include <cmath>
 
+/* Butterworth Q factor (1/sqrt(2)) for second-order filters */
+static constexpr double BUTTERWORTH_Q = 0.707;
+
 /* ── Helpers for in-place audio processing ── */
 
 static void applyVolume(float *frames, ma_uint32 frameCount, ma_uint32 channels, float volume)
@@ -40,7 +43,7 @@ static bool ensureLPF(ma_lpf2 *lpf, int *activeCutoff, int targetHz)
 	{
 		ma_lpf2_config cfg = ma_lpf2_config_init(ma_format_f32, DEFAULT_CHANNELS,
 												  DEFAULT_SAMPLE_RATE,
-												  static_cast<double>(targetHz), 0.707);
+												  static_cast<double>(targetHz), BUTTERWORTH_Q);
 		if (*activeCutoff == 0)
 			ma_lpf2_init(&cfg, NULL, lpf);
 		else
@@ -62,7 +65,7 @@ static bool ensureHPF(ma_hpf2 *hpf, int *activeCutoff, int targetHz)
 	{
 		ma_hpf2_config cfg = ma_hpf2_config_init(ma_format_f32, DEFAULT_CHANNELS,
 												  DEFAULT_SAMPLE_RATE,
-												  static_cast<double>(targetHz), 0.707);
+												  static_cast<double>(targetHz), BUTTERWORTH_Q);
 		if (*activeCutoff == 0)
 			ma_hpf2_init(&cfg, NULL, hpf);
 		else
